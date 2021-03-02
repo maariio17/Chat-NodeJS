@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel=StyleSheet href="styles.css">
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+
+      /* LOGIN */
+      .loginUsuario{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-content: center;
+      }
+      .login{
+        text-align: center;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 300px;
+        padding: 2rem;
+        height: min-content;
+        border: 1px solid black;
+      }
+      /* CHAT */
+      .chat{
+        visibility: hidden;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  </head>
+  <body>
+    <div class="loginUsuario">
+      <div class="login">
+        <h3>Ingrese su nombre:</h3>
+        <input type="text" id="username">
+        <br>
+        <input type="button" value="Ingresar al chat" id="button-entrar" onclick="entraralchat()">
+      </div>
+    </div>
+    
+    <div class="chat">
+      <h3>Bienvenido al chat!</h3>
+      <ul id="messages"></ul>
+      <form id="form" action="">
+        <input id="input" autocomplete="off" /><button>Send</button><button id="negro" onclick="bold()">Negrita</button><input id="color" type="color" />
+      </form>
+    </div>
+    
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+
+      var messages = document.getElementById('messages');
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+      var username = document.getElementById('username');
+      var color = document.getElementById('color');
+      var negro = document.getElementById('negro');
+      var login = document.getElementsByClassName('loginUsuario');
+      var chat = document.getElementsByClassName('chat');
+      var negrita = false;
+
+      function bold(){
+        if(negrita==false){
+          negrita=true;
+          alert("Negrita ");
+        }else{
+          negrita=false;
+          alert("No negrita");
+        }
+      }
+
+      function entraralchat(){
+        if(username.value == ''){
+          alert('Debes de introducir un usuario');
+        } else{
+          $('.loginUsuario').css('display', 'none');
+          $('.chat').css('visibility','visible');
+        }
+      }
+
+      form.addEventListener('submit', function(e) {
+      e.preventDefault();
+        if(username.value){
+          if (input.value) {
+            var mensaje =  {
+              user: username.value,
+              msg :input.value,
+              bold: negrita,
+              color: color.value
+            };
+          socket.emit('chat message',mensaje);
+          input.value = ''; 
+        }
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+      var item = document.createElement('li');
+      if(msg.bold==true){
+        item.textContent = msg.user +' : '+msg.msg;
+        item.style.fontWeight ="bold";
+        item.style.color=msg.color;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      }else{
+        item.textContent = msg.user +' : '+msg.msg;
+        item.style.color=msg.color;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      }      
+    });
+    </script>
+</html>
